@@ -1,39 +1,84 @@
 use std::fs;
 
 const FILENAME: &str = "input.txt";
-const UNSET_DIGIT: u32 = 11;
+const UNSET: u32 = std::u32::MAX;
+const NUMBERS:  [&str;19] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
-fn main() {
-    let raw_text: String = fs::read_to_string(FILENAME).expect("Failed to open file");
+fn read_text_from_file() -> String {
+    fs::read_to_string(FILENAME).expect("Failed to open file")
+}
 
-    let mut lines = raw_text.lines();
-    let mut optional_line = lines.next();
-    let mut accumulator = 0;
-    while optional_line.is_some() {
-        let line = optional_line.unwrap();
+fn string_to_number(string: &str) -> u32 {
+    match string {
+        "one" => 1,
+        "two" => 2,
+        "three" => 3,
+        "four" => 4,
+        "five" => 5,
+        "six" => 6,
+        "seven" => 7,
+        "eight" => 8,
+        "nine" => 9,
+        _ => panic!("Unrecognized number {}", string)
+    }
+}
+
+fn calculate_line_value(line: &str) -> u32 {
         println!("parsing {}", line);
 
-        let mut first_digit = UNSET_DIGIT;
-        let mut last_digit = UNSET_DIGIT;
+        let mut first_digit = UNSET;
+        let mut last_digit = UNSET;
 
-        for character in line.chars() {
-            if character.is_digit(10) {
-                let digit = character.to_digit(10);
-                if first_digit == UNSET_DIGIT {
-                    first_digit = digit.expect("Not a digit");
+        let mut first_index = UNSET;
+        let mut last_index = UNSET;
+
+        for candidate in NUMBERS {
+            let search_result = line.find(candidate);
+            if search_result.is_some() {
+                let index = search_result.unwrap() as u32;
+
+                if (first_index == UNSET) || (index < first_index) {
+                    first_index = index;
+
+                    let parse_result = candidate.parse::<u32>();
+                    if parse_result.is_ok() {
+                        first_digit = parse_result.unwrap();
+                    } else {
+                        first_digit = string_to_number(candidate);
+                    }
                 }
 
-               last_digit = digit.expect("Not a digit"); 
+                if (last_digit == UNSET) || (index > last_index) {
+                    last_index = index;
+
+                    let parse_result = candidate.parse::<u32>();
+                    if parse_result.is_ok() {
+                        last_digit = parse_result.unwrap();
+                    } else {
+                        last_digit = string_to_number(candidate);
+                    }
+                }
             }
         }
+        first_digit * 10 + last_digit
+}
 
-        let new_number = first_digit * 10 + last_digit;
+fn main() {
+    let raw_text = read_text_from_file();
+    let mut lines = raw_text.lines();
 
-        println!("adding {} to accumulator", new_number);
-        accumulator += new_number;
+    let mut accumulator = 0;
+
+    let mut optional_line = lines.next();
+    while optional_line.is_some() {
+        let line = optional_line.unwrap();
+        let line_value = calculate_line_value(line);
+
+        println!("Adding {} to accumulator", line_value);
+        accumulator += line_value;
 
         optional_line = lines.next();
     }
 
-    println!("total: {}", accumulator);
+    println!("Total: {}", accumulator);
 }
