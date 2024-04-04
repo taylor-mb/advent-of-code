@@ -1,3 +1,5 @@
+// Puzzle link: https://adventofcode.com/2023/day/1
+
 use std::fs;
 
 const FILENAME: &str = "input.txt";
@@ -33,9 +35,10 @@ fn calculate_line_value(line: &str) -> u32 {
         let mut last_index = UNSET;
 
         for candidate in NUMBERS {
-            let search_result = line.find(candidate);
-            if search_result.is_some() {
-                let index = search_result.unwrap() as u32;
+            let search_result: Vec<_> = line.match_indices(candidate).collect();
+            if !search_result.is_empty() {
+                // Find the index of the first occurrence of the number
+                let mut index = search_result.first().unwrap().0 as u32;
 
                 if (first_index == UNSET) || (index < first_index) {
                     first_index = index;
@@ -48,6 +51,8 @@ fn calculate_line_value(line: &str) -> u32 {
                     }
                 }
 
+                // Find the index of the last occurrence of the number
+                index = search_result.last().unwrap().0 as u32;
                 if (last_digit == UNSET) || (index > last_index) {
                     last_index = index;
 
